@@ -235,7 +235,6 @@ C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMo
 C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Controllers\AccountController.cs
 C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Controllers\HomeController.cs
 C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Controllers\ManageController.cs
-C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Controllers\MoviesController.cs
 C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Data\ApplicationDbContext.cs
 C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Data\enumTransFrequency.cs
 C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Data\enumTransType.cs
@@ -265,9 +264,6 @@ C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMo
 C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Models\Account.cs
 C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Models\AccountViewModel.cs
 C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Models\ApplicationUser.cs
-C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Models\Movie.cs
-C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Models\MovieGenreViewModel.cs
-C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Models\SeedData.cs
 C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Models\Trans.cs
 C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Models\AccountViewModels\ExternalLoginConfirmationViewModel.cs
 C:\Users\skylar\Documents\Visual Studio 2015\Projects\thereal\MvcMovie\src\MvcMovie\Models\AccountViewModels\ForgotPasswordViewModel.cs
