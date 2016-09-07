@@ -1,0 +1,11 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/MvcMovie/src/MvcMovie/Properties/PublishProfiles
+/MvcMovie/src/MvcMovie/obj/Release/netcoreapp1.0
+*.vs
+*.suo
+*.pdb
+/MvcMovie/src/MvcMovie/bin
+

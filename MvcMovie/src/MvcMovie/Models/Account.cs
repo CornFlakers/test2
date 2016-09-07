@@ -15,8 +15,6 @@
  * 
  * */
 
-using System.Collections.Generic;
-using MvcMovie.Models;
 
 namespace MvcMovie.Models
 {
