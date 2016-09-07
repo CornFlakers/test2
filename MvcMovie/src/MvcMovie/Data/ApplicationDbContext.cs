@@ -24,5 +24,7 @@ namespace MvcMovie.Data
         }
 
         public DbSet<Movie> Movie { get; set; }
+        public DbSet<Trans> Trans { get; set; }
+        public DbSet<Account> tUserAccount { get; set; }
     }
 }

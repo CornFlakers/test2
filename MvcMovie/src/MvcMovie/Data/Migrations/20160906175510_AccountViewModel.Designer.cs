@@ -8,9 +8,10 @@ using MvcMovie.Data;
 namespace MvcMovie.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20160906175510_AccountViewModel")]
+    partial class AccountViewModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.0-rtm-21431")
@@ -123,22 +124,6 @@ namespace MvcMovie.Data.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("MvcMovie.Models.Account", b =>
-                {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<decimal>("ProjectedBalance");
-
-                    b.Property<decimal>("StartingBalance");
-
-                    b.Property<string>("UserID");
-
-                    b.HasKey("ID");
-
-                    b.ToTable("tUserAccount");
-                });
-
             modelBuilder.Entity("MvcMovie.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id");
@@ -210,29 +195,6 @@ namespace MvcMovie.Data.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("Movie");
-                });
-
-            modelBuilder.Entity("MvcMovie.Models.Trans", b =>
-                {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("description")
-                        .HasAnnotation("MaxLength", 60);
-
-                    b.Property<DateTime>("transDate");
-
-                    b.Property<int>("transFrequency");
-
-                    b.Property<int>("transType");
-
-                    b.Property<string>("userID");
-
-                    b.Property<decimal>("value");
-
-                    b.HasKey("ID");
-
-                    b.ToTable("Trans");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRoleClaim<string>", b =>

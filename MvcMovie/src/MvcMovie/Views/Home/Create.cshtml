@@ -1,0 +1,80 @@
+@model MvcMovie.Models.Trans
+@using System.Web;
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+
+
+<h2>Create</h2>
+
+<form asp-action="Create">
+    <div class="form-horizontal">
+        <h4>Trans</h4>
+        <hr />
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="form-group">
+            <label asp-for="description" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <input asp-for="description" class="form-control" />
+                <span asp-validation-for="description" class="text-danger" />
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="transDate" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <input asp-for="transDate" id="EnterDate" class="form-control" />
+                <span asp-validation-for="transDate" class="text-danger" />
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="transType" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <select asp-for="transType" asp-items="Html.GetEnumSelectList<MvcMovie.Data.enumTransType>()"></select>
+                <span asp-validation-for="transType" class="text-danger" />
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="value" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <input asp-for="value" class="form-control" />
+                <span asp-validation-for="value" class="text-danger" />
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="transFrequency" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <select asp-for="transFrequency" asp-items="Html.GetEnumSelectList<MvcMovie.Data.enumTransFrequency>()">
+
+                </select>
+                <span asp-validation-for="transFrequency" class="text-danger" />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Create" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+</form>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>  
+<script>
+    $(document).ready(function() {
+        $("#EnterDate").datepicker({
+            dateFormat:"dd/mm/yy"
+        });
+    });
+</script>  
+}
+
+
