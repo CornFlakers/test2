@@ -45,7 +45,8 @@ namespace MvcMovie.Controllers
                     }
                     else
                     {
-                        if(userAccount.StartingBalance == 0M)
+                        //record found, update w/ balance, only if there is a value other than 0 provided
+                        if(startingBalance != 0M)
                         {
                             //existing user account, update
                             userAccount.StartingBalance = (decimal)startingBalance;
@@ -92,7 +93,6 @@ namespace MvcMovie.Controllers
             //we need to get starting balance from user
             //this will come in the form of a static 'bank balance' field entered in the index page
 
-
             //get all incomes that's coming in ref to 'today'
             List<Trans> income = accountVM.lstTransactions.Where(x => x.transType == enumTransType.Income
                                                                     && x.transDate >= DateTime.Today).ToList();
@@ -131,7 +131,7 @@ namespace MvcMovie.Controllers
                 moneyOut += e.value;
             }
 
-            accountVM.userAccount.ProjectedBalance = (moneyIn - moneyOut);
+            accountVM.userAccount.ProjectedBalance = accountVM.userAccount.StartingBalance + moneyIn - moneyOut;
 
             return View(accountVM);
         }
