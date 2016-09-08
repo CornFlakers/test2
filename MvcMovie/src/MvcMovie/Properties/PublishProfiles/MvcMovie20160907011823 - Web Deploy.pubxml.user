@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file is used by the publish/package process of your Web project. You can customize the behavior of this process
+by editing this MSBuild file. In order to learn more about this please visit http://go.microsoft.com/fwlink/?LinkID=208121. 
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+    <EncryptedPassword>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAPMn9aPeJYUiDwW3sY7kUbAAAAAACAAAAAAAQZgAAAAEAACAAAADZe/CPxdc8hLpfzINyBaf5B8EPpJOW1iUfzuPkIED31gAAAAAOgAAAAAIAACAAAAA2bc5gg1I6RudGyxfaD2QPrRv1PsvwWqO6/07lpOgxf4AAAABsfzW3bNnAO0SxeSRr/faiKJK7O9l9dexKxJU7OWAifo6ct17S0xL/1mjVSy4rl8xlrAzIPpVPM8Q3+6OcUfiisNF1E6rJT/0gzGnfNbfw62Q6R+vP4OYKx7zBs+ZKgnCGn70x7G7/vmqhL+6/4TAcgGwnFgKYAGiIIb3swB31mEAAAACLhnim5iucZ3QmQj/qgrh8B2MU4zmc3jyoXzN6xf8IAWt/7YGJETQ/k7JWmfiefg4W0UiDbcewWZjeSwnZGRnh</EncryptedPassword>
+  </PropertyGroup>
+  <ItemGroup>
+    <DestinationConnectionStrings Include="DefaultConnection">
+      <Value>Data Source=tcp:mvcmovie20160907011823dbserver.database.windows.net,1433;Initial Catalog=MvcMovie20160907011823_db;User Id=sbarth@mvcmovie20160907011823dbserver;Password=1qaz2wsx!QAZ@WSX</Value>
+    </DestinationConnectionStrings>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,104 @@
+event reports
+
+172.18.66.49(hall2)
+Administrator
+@OLG2012
+
+.46(hall 2 client)
+#Service
+@OLG2012
+
+I've updated iteration 3 tasks
+running the report 
+to ensure that upick (Electronic/Paper) shows up in the report 
+if it does not then we will need to modify said reports
+Hall2 (client, .46) 
+its already setup with keys and everything to do a paper or electronic upick purchase
+
+Invoice Report
+Payouts and Progressives > Invoice Report
+Provide: Date Range
+*Missing Box at the top
+!hold off on that report right now... we will have to discuss a bit... that report I beleivcve shows a copy of invoices done for that hall, and I believe the info is pushed down from centrax
+!your environment might not be connected to a centrax
+
+--------
+
+Prize Office Payouts BC Prizes paid by olg
+CONFIRMED GOOD
+
+possibly at centrax?
+
+--------
+
+Progressive Jackpot Balances report
+Payouts and Progressives > Progressive Jackpot Balances report
+Provide: Date (As of), select prize pool, pod only y/n
+SATISFIED
+
+--------
+
+card 34 umex
+
+--------
+
+Attendance Report
+posisbly centrax?
+not in list?
+
+--------
+
+Player Summary Report
+4
+check db
+100101, 100099
+
+3,48,56
+21,43,63
+24,38,65
+
+report pulling from win/wins table
+
+sounds like something is missing investigate
+--------
+
+40.86.230.96
+mybb
+--------
+player suspend report
+how do you suspend a player?
+after 48hr, playeraccount with a balance
+check on monday for suspended player in .46 playerid 4 for winning like 128$ or something ... and not getting paid out / cr in pos
+
+--------
+terminal activity report
+requires gecko
+incomplete
+
+--------
+uncashed credits report
+has 10$ opening credits? wtf?
+
+--------
+user log report
+was good
+
+--------
+sales and prizes by game report
+report doesnt exist in event, get prop name plox
+
+--------
+game activity report (GAR)
+report doesnot exist in event
+
+--------
+game activity report (GAR) part b
+report doesnot exist in event
+
+--------
+
+pid4
+rid21
+
+
+
