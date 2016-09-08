@@ -64,11 +64,6 @@ namespace MvcMovie.Controllers
                 }
             }
 
-            //use linq to get list of entries
-            //IQueryable<string> transQuery = from t in _context.Trans
-            //                                orderby (int)t.transType
-            //                                select (int)t.transType;
-
             var trans = from t in _context.Trans
                         where t.userID == userId
                         select t;
@@ -85,8 +80,11 @@ namespace MvcMovie.Controllers
 
             var accountVM = new AccountViewModel();
             accountVM.userAccount = await _context.tUserAccount.SingleOrDefaultAsync(u => u.UserID == userId);
-            accountVM.transTypes = new List<enumTransType> { enumTransType.Expense, enumTransType.Income, enumTransType.OneTimeExpense, enumTransType.OneTimeIncome };
+            accountVM.transTypes = new List<enumTransType> { enumTransType.Expense, enumTransType.Income};
             accountVM.lstTransactions = await trans.ToListAsync();
+
+            accountVM.lstTransactions.OrderBy(t => t.transDate).ThenBy(t => t.transType);
+
             accountVM.lstTransactions.Sort((x, y) => DateTime.Compare(x.transDate, y.transDate));
 
             //processing for projected balance
@@ -94,15 +92,22 @@ namespace MvcMovie.Controllers
             //this will come in the form of a static 'bank balance' field entered in the index page
 
             //get all incomes that's coming in ref to 'today'
+            //cannot be one time incomes, as those will be calculated as 'money i got / am getting before my next pay'
+            //if it's money they 'got' in the past, then they should have 'gotten it' and updated their startbal accordingly
+            //so no need to get any possible entries in the past
+            //users will delete the old entries, or we will clean them, asking user if they received/paid bill before deleting
             List<Trans> income = accountVM.lstTransactions.Where(x => x.transType == enumTransType.Income
-                                                                    && x.transDate >= DateTime.Today).ToList();
+                                                                && x.transFrequency != enumTransFrequency.OneTime
+                                                                && x.transDate >= DateTime.Today).ToList();
 
             //get the 1st one, as you are trying to find how much $ you will have between now and next pay
             Trans nextIncome = income.FirstOrDefault();
 
             //get any 'one time incomes' between now and PAYDAY
-            List<Trans> oneTimeIncome = accountVM.lstTransactions.Where(x => x.transType == enumTransType.OneTimeIncome
-                                                                        && x.transDate < nextIncome.transDate).ToList();
+            List<Trans> oneTimeIncome = accountVM.lstTransactions.Where(x => x.transType == enumTransType.Income
+                                                                        && x.transFrequency == enumTransFrequency.OneTime
+                                                                        && x.transDate < nextIncome.transDate
+                                                                        && x.transDate >= DateTime.Today).ToList();
 
             var moneyIn = 0M;
 
@@ -118,11 +123,9 @@ namespace MvcMovie.Controllers
             //let's see if we will meet all our bills before next PAYDAY,
             //and how much money we will have to play with
 
-            List<Trans> expenses = accountVM.lstTransactions
-                .Where(x => (x.transType == enumTransType.Expense ||
-                            x.transType == enumTransType.OneTimeExpense) &&
-                            x.transDate < nextIncome.transDate)
-                .ToList();
+            //get a list of upcoming expenses between now and payday
+            List<Trans> expenses = accountVM.lstTransactions.Where(x => x.transType == enumTransType.Expense
+                                                                    && x.transDate < nextIncome.transDate).ToList();
 
             var moneyOut = 0M;
 
@@ -153,219 +156,230 @@ namespace MvcMovie.Controllers
         {
             if (ModelState.IsValid)
             {
-                switch (transaction.transType)
+                #region Switch On TransFrequency OneTime vs. ... Scheduled
+                switch(transaction.transFrequency)
                 {
-                    case (enumTransType.OneTimeExpense):
-                    case (enumTransType.OneTimeIncome):
+                    case (enumTransFrequency.OneTime):
+                        //do one time
+                        transaction.userID = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                        _context.Add(transaction);
+                        await _context.SaveChangesAsync();
+                        return RedirectToAction("Index");
+                    case (enumTransFrequency.Daily):
+                    case (enumTransFrequency.Weekly):
+                    case (enumTransFrequency.BiWeekly):
+                    case (enumTransFrequency.Monthly):
+                    case (enumTransFrequency.Yearly):
+                        #region Switch On TransType Income vs. Expense
+                        switch (transaction.transType)
                         {
-                            //do one time
-                            transaction.userID = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                            _context.Add(transaction);
-                            await _context.SaveChangesAsync();
-                            return RedirectToAction("Index");
-                        }
-                    case (enumTransType.Expense):
-                    case (enumTransType.Income):
-                        {
-                            //do recurring expense
-                            //for the next 6 months, take transaction amount, and transaction frequency
-                            //fill db with calendar entries of transaction
-                            switch (transaction.transFrequency)
-                            {
-                                #region Daily
-                                case (enumTransFrequency.Daily):
+                            case (enumTransType.Expense):
+                            case (enumTransType.Income):
+                                {
+                                    //do recurring expense
+                                    //for the next 6 months, take transaction amount, and transaction frequency
+                                    //fill db with calendar entries of transaction
+                                    switch (transaction.transFrequency)
                                     {
-                                        //do daily
-                                        List<Trans> transactionsToAdd = new List<Trans>();
+                                        #region Daily
+                                        case (enumTransFrequency.Daily):
+                                            {
+                                                //do daily
+                                                List<Trans> transactionsToAdd = new List<Trans>();
 
-                                        //get date of trans as per user entry
-                                        var date = transaction.transDate.Date;
+                                                //get date of trans as per user entry
+                                                var date = transaction.transDate.Date;
 
-                                        //configurable time span, make user option to refresh and do another 6m
-                                        var monthsAhead = 6;
-                                        var frequencyInDays = 1;
+                                                //configurable time span, make user option to refresh and do another 6m
+                                                var monthsAhead = 6;
+                                                var frequencyInDays = 1;
 
-                                        //get time in the future to stop logging the trans so we dont infinite log
-                                        var monthsFromTransactionDate = transaction.transDate.AddMonths(monthsAhead);
+                                                //get time in the future to stop logging the trans so we dont infinite log
+                                                var monthsFromTransactionDate = transaction.transDate.AddMonths(monthsAhead);
 
-                                        //from now, as long as we are less than the time above, increasing <DAILY>, add a transaction
-                                        for (DateTime i = date; i < monthsFromTransactionDate; i = i.AddDays(frequencyInDays))
-                                        {
-                                            transactionsToAdd.Add(
-                                                new Trans
+                                                //from now, as long as we are less than the time above, increasing <DAILY>, add a transaction
+                                                for (DateTime i = date; i < monthsFromTransactionDate; i = i.AddDays(frequencyInDays))
                                                 {
-                                                    description = transaction.description,//get dscr from user
+                                                    transactionsToAdd.Add(
+                                                        new Trans
+                                                        {
+                                                            description = transaction.description,//get dscr from user
                                                     transDate = i,//set date to be either (a) what user entereed AND THEN incrementing auto until 6m from now
                                                     transFrequency = transaction.transFrequency,//log what the frequency is for (to display + calc on refresh)
                                                     transType = transaction.transType,//expense? used for styling
                                                     value = transaction.value,//value of i/o
                                                     userID = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                                                        }
+                                                    );
                                                 }
-                                            );
-                                        }
 
-                                        //add the trans to the db
-                                        _context.Trans.AddRange(transactionsToAdd);
-                                        await _context.SaveChangesAsync();
-                                        return RedirectToAction("Index");
-                                    }
-                                #endregion
-                                #region Weekly
-                                case (enumTransFrequency.Weekly):
-                                    {
-                                        //do weekly
-                                        List<Trans> transactionsToAdd = new List<Trans>();
+                                                //add the trans to the db
+                                                _context.Trans.AddRange(transactionsToAdd);
+                                                await _context.SaveChangesAsync();
+                                                return RedirectToAction("Index");
+                                            }
+                                        #endregion
+                                        #region Weekly
+                                        case (enumTransFrequency.Weekly):
+                                            {
+                                                //do weekly
+                                                List<Trans> transactionsToAdd = new List<Trans>();
 
-                                        //get date of trans as per user entry
-                                        var date = transaction.transDate.Date;
+                                                //get date of trans as per user entry
+                                                var date = transaction.transDate.Date;
 
-                                        //configurable time span, make user option to refresh and do another 6m
-                                        var monthsAhead = 6;
-                                        var frequencyInDays = 7;//weekly would be once every 7 days
+                                                //configurable time span, make user option to refresh and do another 6m
+                                                var monthsAhead = 6;
+                                                var frequencyInDays = 7;//weekly would be once every 7 days
 
-                                        //get time in the future to stop logging the trans so we dont infinite log
-                                        var monthsFromTransactionDate = transaction.transDate.AddMonths(monthsAhead);
+                                                //get time in the future to stop logging the trans so we dont infinite log
+                                                var monthsFromTransactionDate = transaction.transDate.AddMonths(monthsAhead);
 
-                                        //from now, as long as we are less than the time above, increasing <Weekly>, add a transaction
-                                        for (DateTime i = date; i < monthsFromTransactionDate; i = i.AddDays(frequencyInDays))
-                                        {
-                                            transactionsToAdd.Add(
-                                                new Trans
+                                                //from now, as long as we are less than the time above, increasing <Weekly>, add a transaction
+                                                for (DateTime i = date; i < monthsFromTransactionDate; i = i.AddDays(frequencyInDays))
                                                 {
-                                                    description = transaction.description,//get dscr from user
+                                                    transactionsToAdd.Add(
+                                                        new Trans
+                                                        {
+                                                            description = transaction.description,//get dscr from user
                                                     transDate = i,//set date to be either (a) what user entereed AND THEN incrementing auto until 6m from now
                                                     transFrequency = transaction.transFrequency,//log what the frequency is for (to display + calc on refresh)
                                                     transType = transaction.transType,//expense? used for styling
                                                     value = transaction.value,//value of i/o
                                                     userID = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                                                        }
+                                                    );
                                                 }
-                                            );
-                                        }
 
-                                        //add the trans to the db
-                                        _context.Trans.AddRange(transactionsToAdd);
-                                        await _context.SaveChangesAsync();
-                                        return RedirectToAction("Index");
-                                    }
-                                #endregion
-                                #region BiWeekly
-                                case (enumTransFrequency.BiWeekly):
-                                    {
-                                        //do biweekly
-                                        List<Trans> transactionsToAdd = new List<Trans>();
+                                                //add the trans to the db
+                                                _context.Trans.AddRange(transactionsToAdd);
+                                                await _context.SaveChangesAsync();
+                                                return RedirectToAction("Index");
+                                            }
+                                        #endregion
+                                        #region BiWeekly
+                                        case (enumTransFrequency.BiWeekly):
+                                            {
+                                                //do biweekly
+                                                List<Trans> transactionsToAdd = new List<Trans>();
 
-                                        //get date of trans as per user entry
-                                        var date = transaction.transDate.Date;
+                                                //get date of trans as per user entry
+                                                var date = transaction.transDate.Date;
 
-                                        //configurable time span, make user option to refresh and do another 6m
-                                        var monthsAhead = 6;
-                                        var frequencyInDays = 14;//14 days would be biweekly (every two weeks (7days))
+                                                //configurable time span, make user option to refresh and do another 6m
+                                                var monthsAhead = 6;
+                                                var frequencyInDays = 14;//14 days would be biweekly (every two weeks (7days))
 
-                                        //get time in the future to stop logging the trans so we dont infinite log
-                                        var monthsFromTransactionDate = transaction.transDate.AddMonths(monthsAhead);
+                                                //get time in the future to stop logging the trans so we dont infinite log
+                                                var monthsFromTransactionDate = transaction.transDate.AddMonths(monthsAhead);
 
-                                        //from now, as long as we are less than the time above, increasing <BiWeekly>, add a transaction
-                                        for (DateTime i = date; i < monthsFromTransactionDate; i = i.AddDays(frequencyInDays))
-                                        {
-                                            transactionsToAdd.Add(
-                                                new Trans
+                                                //from now, as long as we are less than the time above, increasing <BiWeekly>, add a transaction
+                                                for (DateTime i = date; i < monthsFromTransactionDate; i = i.AddDays(frequencyInDays))
                                                 {
-                                                    description = transaction.description,//get dscr from user
+                                                    transactionsToAdd.Add(
+                                                        new Trans
+                                                        {
+                                                            description = transaction.description,//get dscr from user
                                                     transDate = i,//set date to be either (a) what user entereed AND THEN incrementing auto until 6m from now
                                                     transFrequency = transaction.transFrequency,//log what the frequency is for (to display + calc on refresh)
                                                     transType = transaction.transType,//expense? used for styling
                                                     value = transaction.value,//value of i/o
                                                     userID = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                                                        }
+                                                    );
                                                 }
-                                            );
-                                        }
 
-                                        //add the trans to the db
-                                        _context.Trans.AddRange(transactionsToAdd);
-                                        await _context.SaveChangesAsync();
-                                        return RedirectToAction("Index");
-                                    }
-                                #endregion
-                                case (enumTransFrequency.Monthly):
-                                    {
-                                        //do monthly
-                                        List<Trans> transactionsToAdd = new List<Trans>();
+                                                //add the trans to the db
+                                                _context.Trans.AddRange(transactionsToAdd);
+                                                await _context.SaveChangesAsync();
+                                                return RedirectToAction("Index");
+                                            }
+                                        #endregion
+                                        case (enumTransFrequency.Monthly):
+                                            {
+                                                //do monthly
+                                                List<Trans> transactionsToAdd = new List<Trans>();
 
-                                        //get date of trans as per user entry
-                                        var date = transaction.transDate.Date;
+                                                //get date of trans as per user entry
+                                                var date = transaction.transDate.Date;
 
-                                        //configurable time span, make user option to refresh and do another 6m
-                                        var monthsAhead = 6;
-                                        var frequencyInMonths = 1;//1 month ahead
+                                                //configurable time span, make user option to refresh and do another 6m
+                                                var monthsAhead = 6;
+                                                var frequencyInMonths = 1;//1 month ahead
 
-                                        //get time in the future to stop logging the trans so we dont infinite log
-                                        var monthsFromTransactionDate = transaction.transDate.AddMonths(monthsAhead);
+                                                //get time in the future to stop logging the trans so we dont infinite log
+                                                var monthsFromTransactionDate = transaction.transDate.AddMonths(monthsAhead);
 
-                                        //from now, as long as we are less than the time above, increasing <Monthly>, add a transaction
-                                        for (DateTime i = date; i < monthsFromTransactionDate; i = i.AddMonths(frequencyInMonths))
-                                        {
-                                            transactionsToAdd.Add(
-                                                new Trans
+                                                //from now, as long as we are less than the time above, increasing <Monthly>, add a transaction
+                                                for (DateTime i = date; i < monthsFromTransactionDate; i = i.AddMonths(frequencyInMonths))
                                                 {
-                                                    description = transaction.description,//get dscr from user
+                                                    transactionsToAdd.Add(
+                                                        new Trans
+                                                        {
+                                                            description = transaction.description,//get dscr from user
                                                     transDate = i,//set date to be either (a) what user entereed AND THEN incrementing auto until 6m from now
                                                     transFrequency = transaction.transFrequency,//log what the frequency is for (to display + calc on refresh)
                                                     transType = transaction.transType,//expense? used for styling
                                                     value = transaction.value,//value of i/o
                                                     userID = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                                                        }
+                                                    );
                                                 }
-                                            );
-                                        }
 
-                                        //add the trans to the db
-                                        _context.Trans.AddRange(transactionsToAdd);
-                                        await _context.SaveChangesAsync();
-                                        return RedirectToAction("Index");
-                                    }
-                                case (enumTransFrequency.Yearly):
-                                    {
-                                        //do yearly
-                                        List<Trans> transactionsToAdd = new List<Trans>();
+                                                //add the trans to the db
+                                                _context.Trans.AddRange(transactionsToAdd);
+                                                await _context.SaveChangesAsync();
+                                                return RedirectToAction("Index");
+                                            }
+                                        case (enumTransFrequency.Yearly):
+                                            {
+                                                //do yearly
+                                                List<Trans> transactionsToAdd = new List<Trans>();
 
-                                        //get date of trans as per user entry
-                                        var date = transaction.transDate.Date;
+                                                //get date of trans as per user entry
+                                                var date = transaction.transDate.Date;
 
-                                        //configurable time span, make user option to refresh and do another 6m
-                                        var yearsAhead = 2;//give them two years so at least one gets logged
-                                        var frequencyInYears = 1;//1 month ahead
+                                                //configurable time span, make user option to refresh and do another 6m
+                                                var yearsAhead = 2;//give them two years so at least one gets logged
+                                                var frequencyInYears = 1;//1 month ahead
 
-                                        //get time in the future to stop logging the trans so we dont infinite log
-                                        var monthsFromTransactionDate = transaction.transDate.AddYears(yearsAhead);
+                                                //get time in the future to stop logging the trans so we dont infinite log
+                                                var monthsFromTransactionDate = transaction.transDate.AddYears(yearsAhead);
 
-                                        //from now, as long as we are less than the time above, increasing <Monthly>, add a transaction
-                                        for (DateTime i = date; i < monthsFromTransactionDate; i = i.AddYears(frequencyInYears))
-                                        {
-                                            transactionsToAdd.Add(
-                                                new Trans
+                                                //from now, as long as we are less than the time above, increasing <Monthly>, add a transaction
+                                                for (DateTime i = date; i < monthsFromTransactionDate; i = i.AddYears(frequencyInYears))
                                                 {
-                                                    description = transaction.description,//get dscr from user
+                                                    transactionsToAdd.Add(
+                                                        new Trans
+                                                        {
+                                                            description = transaction.description,//get dscr from user
                                                     transDate = i,//set date to be either (a) what user entereed AND THEN incrementing auto until 6m from now
                                                     transFrequency = transaction.transFrequency,//log what the frequency is for (to display + calc on refresh)
                                                     transType = transaction.transType,//expense? used for styling
                                                     value = transaction.value,//value of i/o
                                                     userID = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                                                        }
+                                                    );
                                                 }
-                                            );
-                                        }
 
-                                        //add the trans to the db
-                                        _context.Trans.AddRange(transactionsToAdd);
-                                        await _context.SaveChangesAsync();
-                                        return RedirectToAction("Index");
+                                                //add the trans to the db
+                                                _context.Trans.AddRange(transactionsToAdd);
+                                                await _context.SaveChangesAsync();
+                                                return RedirectToAction("Index");
+                                            }
+                                        default:
+                                            break;
                                     }
-                                default:
                                     break;
-                            }
-                            break;
+                                }
+                            default:
+                                break;
                         }
-                    default:
+                        #endregion
                         break;
                 }
+                #endregion
+
             }
             return View(transaction);
         }

@@ -7,6 +7,7 @@ namespace MvcMovie.Data
 {
     public enum enumTransFrequency
     {
+        OneTime,
         Daily,
         Weekly,
         BiWeekly,

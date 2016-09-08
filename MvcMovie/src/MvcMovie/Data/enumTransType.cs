@@ -8,8 +8,6 @@ namespace MvcMovie.Data
     public enum enumTransType
     {
         Income,
-        Expense,
-        OneTimeExpense,
-        OneTimeIncome
+        Expense
     }
 }

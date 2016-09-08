@@ -49,7 +49,7 @@
                 <td>
                     @Html.DisplayFor(modelItem => item.description)
                 </td>
-                <td class="@(item.transType == MvcMovie.Data.enumTransType.Expense || item.transType == MvcMovie.Data.enumTransType.OneTimeExpense ? "text-danger" : "")">
+                <td class="@(item.transType == MvcMovie.Data.enumTransType.Expense ? "text-danger" : "")">
                     @Html.DisplayFor(modelItem => item.value)
                 </td>
                 <td>
