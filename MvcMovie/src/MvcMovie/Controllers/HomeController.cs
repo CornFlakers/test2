@@ -159,6 +159,7 @@ namespace MvcMovie.Controllers
                     case (enumTransType.OneTimeIncome):
                         {
                             //do one time
+                            transaction.userID = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                             _context.Add(transaction);
                             await _context.SaveChangesAsync();
                             return RedirectToAction("Index");
